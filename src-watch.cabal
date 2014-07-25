@@ -1,0 +1,29 @@
+name:                src-watch
+version:             0.1.0.0
+synopsis:            Source watcher for Yesod and friends
+description:         
+homepage:            https://github.com/joelteon/src-watch
+license:             BSD3
+license-file:        LICENSE
+author:              Joel Taylor
+maintainer:          me@joelt.io
+-- copyright:           
+category:            System
+build-type:          Simple
+-- extra-source-files:  
+cabal-version:       >=1.10
+
+executable src-watch
+  main-is:             Main.hs
+  build-depends:       base == 4.*
+                     , containers
+                     , cpphs
+                     , directory
+                     , filepath
+                     , haskell-src-exts
+                     , lens
+                     , options
+                     , mtl
+  hs-source-dirs:      src
+  ghc-options:         -Wall
+  default-language:    Haskell2010
