@@ -3,19 +3,16 @@
 module Watch.References where
 
 import Control.Lens
-import Control.Monad
 import Data.Data
 import Data.Data.Lens
+import Data.Maybe
 import Language.Haskell.Exts
 
-filterADT :: (Data a, Data b) => a -> [b]
-filterADT = universeOnOf biplate uniplate
+filterADT :: (Data a, Data b) => (b -> Maybe c) -> a -> [c]
+filterADT f = mapMaybe f . universeOnOf biplate uniplate
 
 splices :: Data a => a -> [String]
 splices = concatMap fromExp
-            . filter (\ x -> case x of SpliceExp{} -> True; _ -> False)
-            . filterADT
+            . filterADT (\ x -> case x of SpliceExp{} -> Just x; _ -> Nothing)
 
-fromExp = map (\ ~(Lit (String s)) -> s)
-        . filter (\ x -> case x of Lit (String _) -> True; _ -> False)
-        . filterADT
+fromExp = filterADT (\ x -> case x of Lit (String s) -> Just s; _ -> Nothing)

@@ -7,7 +7,6 @@ type Ignore = String
 
 data WatchOptions = WatchOptions
                   { wIgnores :: [Ignore]
-                  , wBasedir :: FilePath
                   , wDefines :: [(String, String)]
                   } deriving Show
 
@@ -21,11 +20,11 @@ instance Options WatchOptions where
                             "Filepaths to ignore. This option can be used multiple times."
                       })
 
-        <*> defineOption optionType_string
+     {- <*> defineOption optionType_string
             (\ o -> o { optionShortFlags = "d"
                       , optionLongFlags = ["base-dir"]
                       , optionDescription = "Working directory to assume."
-                      })
+                      }) -}
 
         <*> defineOption optionType_cppdefine
             (\ o -> o { optionShortFlags = "D"

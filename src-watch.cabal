@@ -16,14 +16,18 @@ cabal-version:       >=1.10
 executable src-watch
   main-is:             Main.hs
   build-depends:       base == 4.*
+                     , ansi-terminal
+                     , bytestring
                      , containers
                      , cpphs
                      , directory
                      , filepath
+                     , Glob
                      , haskell-src-exts
                      , lens
                      , options
                      , mtl
+                     , semigroups
   hs-source-dirs:      src
   ghc-options:         -Wall
   default-language:    Haskell2010
