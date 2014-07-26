@@ -13,6 +13,11 @@ filterADT f = mapMaybe f . universeOnOf biplate uniplate
 
 splices :: Data a => a -> [String]
 splices = concatMap fromExp
-            . filterADT (\ x -> case x of SpliceExp{} -> Just x; _ -> Nothing)
+            . filterADT (\ x -> case x of
+                        SpliceExp {} -> Just x
+                        _ -> Nothing)
 
-fromExp = filterADT (\ x -> case x of Lit (String s) -> Just s; _ -> Nothing)
+fromExp :: Data a => a -> [String]
+fromExp = filterADT (\ x -> case x of
+                    Lit (String s) -> Just s
+                    _ -> Nothing)

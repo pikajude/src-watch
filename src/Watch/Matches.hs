@@ -13,5 +13,5 @@ matches :: Refs -> M.Map FilePath Filter
 matches = M.fromListWith (++) . concatMap fromPair . M.toList
 
 fromPair :: (FilePath, Matches) -> [(FilePath, Filter)]
-fromPair (fp, ms) = map (\ (target, pat) -> (target, [(pat, fp)]))
+fromPair (fp, ms) = map (\ (target, pat) -> (init target, [(pat, fp)]))
                   $ N.toList ms

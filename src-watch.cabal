@@ -24,10 +24,12 @@ executable src-watch
                      , filepath
                      , Glob
                      , haskell-src-exts
+                     , hfsevents
                      , lens
                      , options
                      , mtl
                      , semigroups
+                     , transformers
   hs-source-dirs:      src
   ghc-options:         -Wall
   default-language:    Haskell2010

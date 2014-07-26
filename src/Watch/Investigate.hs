@@ -1,6 +1,5 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE StandaloneDeriving #-}
 
 module Watch.Investigate where
 
@@ -30,9 +29,9 @@ known = _1
 refs :: Field2 s s Refs Refs => Lens' s Refs
 refs = _2
 
-concernMap :: WatchOptions -> IO Refs
+concernMap :: MonadIO m => WatchOptions -> m Refs
 concernMap wopts = do
-    ignores <- mapM canonicalizePath (wIgnores wopts)
+    ignores <- mapM (liftIO . canonicalizePath) (wIgnores wopts)
     (_, tree) <- (`runReaderT` (wopts { wIgnores = ignores }, ()))
         . (`execStateT` (S.fromList [], M.fromList []))
         $ investigateDir "."
@@ -47,7 +46,7 @@ investigateDir dest = do
     ks <- use known
     if dest `S.member` ks
         then error "Symlink cycle detected!"
-        else known %= (S.insert dest)
+        else known %= S.insert dest
     contents' <- liftIO $ liftM (\\ [".", ".."]) (getDirectoryContents dest)
     let contents = map (normalise . (dest </>)) contents'
     forM_ contents $ \ item -> do
