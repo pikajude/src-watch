@@ -18,7 +18,7 @@ type Logger m = ReaderT Verbosity m
 runLogger :: Verbosity -> Logger m a -> m a
 runLogger v = (`runReaderT` v)
 
--- loud, quiet :: (MonadReader Verbosity m, MonadIO m) => IO () -> m ()
+deafening, loud, quiet :: (MonadReader Verbosity m, MonadIO m) => IO () -> m ()
 deafening = help Deafening
 loud = help Loud
 quiet = help Quiet

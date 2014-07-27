@@ -20,6 +20,7 @@ data WatchOptions = WatchOptions
                   , wLevel :: Verbosity
                   } deriving Show
 
+opts :: Parser WatchOptions
 opts = WatchOptions
    <$> argument Just (metavar "ROOT")
    <*> many (strOption
@@ -41,11 +42,6 @@ toEnumC x | x >= fromEnum (maxBound :: a) = maxBound
           | x <= fromEnum (minBound :: a) = minBound
           | otherwise = toEnum x
 
+cppOption :: Mod OptionFields (String, String) -> Parser (String, String)
 cppOption s = nullOption (s <> reader cpp) where
-    cpp s = return (second (drop 1) $ span (/= '=') s)
-
-clamp :: Ord a => (a, a) -> a -> a
-clamp (x, y) z
-    | z <= x = x
-    | z >= y = y
-    | otherwise = z
+    cpp s' = return (second (drop 1) $ span (/= '=') s')
