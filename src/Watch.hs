@@ -36,10 +36,11 @@ watch root ops = withManager $ \ mgr -> do
         let ms = matches concerns
         l $ deafening $ putChar '\n' >> showConcerns concerns
         l $ quiet $ putStrLn "done."
-        watchTree mgr (decodeString parent) (const True)
+        stop <- watchTree mgr (decodeString parent) (const True)
             (l . handleEv reset parent ms)
         l $ quiet $ putStrLn "Starting watch..."
         takeMVar reset
+        stop
 
 -- this is fine in theory. it's annoying because it doesn't support
 -- ignoring events caused by the current process (like hfsevents does)
