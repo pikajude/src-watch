@@ -1,4 +1,5 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE ViewPatterns #-}
 
 module Watch where
 
@@ -8,11 +9,12 @@ import Control.Monad.IO.Class
 import Data.Bits
 import Data.List
 import qualified Data.Map as M
+import Filesystem.Path.CurrentOS (decodeString, encodeString)
 import System.Console.ANSI
 import System.Directory
 import System.FilePath
 import System.FilePath.Glob
-import System.OSX.FSEvents
+import System.FSNotify
 import System.Posix.Files
 import Text.Printf
 import Watch.Investigate
@@ -21,7 +23,7 @@ import Watch.Matches
 import Watch.Options
 import Watch.Spew
 
-watch root opts = do
+watch root opts = withManager $ \ mgr -> do
     setCurrentDirectory root
     parent <- canonicalizePath root
     reset <- newEmptyMVar
@@ -32,14 +34,15 @@ watch root opts = do
         let ms = matches concerns
         l $ deafening $ putChar '\n' >> showConcerns concerns
         l $ quiet $ putStrLn "done."
-        stream <- eventStreamCreate [parent] 1.0 True True True
+        watchTree mgr (decodeString parent) (const True)
             (l . handleEv reset parent ms)
         l $ quiet $ putStrLn "Starting watch..."
-        () <- takeMVar reset
-        eventStreamDestroy stream
+        takeMVar reset
 
+-- this is fine in theory. it's annoying because it doesn't support
+-- ignoring events caused by the current process (like hfsevents does)
 handleEv reset root matches ev = do
-    let rel = makeRelative root (eventPath ev)
+    let rel = makeRelative root (encodeString $ eventPath ev)
         key = takeDirectory rel
         pat = takeFileName rel
     unless ("~" `isSuffixOf` pat) $ do
@@ -61,29 +64,16 @@ handleEv reset root matches ev = do
                         mapM_ (putStrLn . ("  * " ++)) xs
                 liftIO $ mapM_ touchFile toTouch
 
-showEvent t ev
-    | itemRemoved ev = pid ev >> red "[removed] " >> dump ev
-    | itemModified ev = pid ev >> yellow "[modified] " >> dump ev
-    | itemRenamed ev = pid ev >> yellow "[renamed] " >> dump ev
-    | itemCreated ev = pid ev >> green "[created] " >> dump ev
-    | mtime ev = pid ev >> yellow "[metadata] " >> dump ev
-    | otherwise = pid ev >> putStrLn ("unknown event for " ++ eventPath ev)
-    where dump ev = if t
-                        then putStrLn (eventPath ev)
-                        else color White (eventPath ev ++ "\n")
-          pid ev = color Black (printf "%#0x " (eventId ev))
+showEvent t (Removed fp _) = red "[removed] " >> dump t fp
+showEvent t (Modified fp _) = yellow "[modified] " >> dump t fp
+showEvent t (Added fp _) = green "[created] " >> dump t fp
+
+dump t (encodeString -> ev) = if t
+    then putStrLn ev
+    else color White (ev ++ "\n")
 
 red = color Red
 green = color Green
 yellow = color Yellow
 
 color r s = setSGR [SetColor Foreground Dull r] >> putStr s >> setSGR [Reset]
-
-itemCreated ev = eventFlagItemCreated .&. eventFlags ev == eventFlagItemCreated
-              && not (itemRemoved ev)
-itemRemoved ev = eventFlagItemRemoved .&. eventFlags ev == eventFlagItemRemoved
-itemRenamed ev = eventFlagItemRenamed .&. eventFlags ev == eventFlagItemRenamed
-itemModified ev = eventFlagItemModified .&. eventFlags ev == eventFlagItemModified
-isFile ev = eventFlagItemIsFile .&. eventFlags ev == eventFlagItemIsFile
-
-mtime ev = eventFlagItemInodeMetaMod .&. eventFlags ev == eventFlagItemInodeMetaMod

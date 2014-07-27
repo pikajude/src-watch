@@ -26,13 +26,14 @@ executable src-watch
                      , cpphs
                      , directory
                      , filepath
+                     , fsnotify
                      , Glob
                      , haskell-src-exts
-                     , hfsevents
                      , lens
                      , optparse-applicative
                      , mtl
                      , semigroups
+                     , system-filepath
                      , transformers
                      , unix
   hs-source-dirs:      src
