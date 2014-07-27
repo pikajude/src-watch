@@ -8,7 +8,5 @@ import System.Exit
 main :: IO ()
 main = do
     args <- getArgs
-    hints <- hlint $
-        ["src"] -- , "--cpp-define=HLINT", "-XQuasiQuotes", "--cpp-ansi"]
-     ++ args
+    hints <- hlint $ "src" : args
     unless (null hints) exitFailure
