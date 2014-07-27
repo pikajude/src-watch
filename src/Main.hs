@@ -1,17 +1,10 @@
-import Options
-import System.Directory
-import System.Exit
-import System.IO
 import Watch
+import Watch.Options
 
 main :: IO ()
-main = runCommand $ \ opts args ->
-    case args of
-        [dir] -> watch dir opts
-        [] -> panic "Usage: src-watch [-i ignores] path"
-        _ -> panic "Extra rubbish on end of arguments, expected exactly one path"
-
-panic :: String -> IO a
-panic s = do
-    hPutStrLn stderr s
-    exitFailure
+main = execParser optsI >>= \ args -> watch (wTarget args) args
+    where
+        optsI = info (helper <*> opts)
+                (fullDesc
+              <> progDesc "Watch a source directory for changes"
+              <> header "src-watch" )

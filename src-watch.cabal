@@ -1,17 +1,21 @@
 name:                src-watch
 version:             0.1.0.0
 synopsis:            Source watcher for Yesod and friends
-description:         
+description:
+  src-watch looks for filepaths inside Template Haskell splices, and rebuilds
+  the Haskell file when the dependency is changed.
 homepage:            https://github.com/joelteon/src-watch
 license:             BSD3
 license-file:        LICENSE
 author:              Joel Taylor
 maintainer:          me@joelt.io
--- copyright:           
 category:            System
 build-type:          Simple
--- extra-source-files:  
 cabal-version:       >=1.10
+
+flag lib-Werror
+  default: False
+  manual: True
 
 executable src-watch
   main-is:             Main.hs
@@ -26,10 +30,13 @@ executable src-watch
                      , haskell-src-exts
                      , hfsevents
                      , lens
-                     , options
+                     , optparse-applicative
                      , mtl
                      , semigroups
                      , transformers
+                     , unix
   hs-source-dirs:      src
   ghc-options:         -Wall
+  if flag(lib-Werror)
+    ghc-options:       -Werror
   default-language:    Haskell2010

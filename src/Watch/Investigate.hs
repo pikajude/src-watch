@@ -19,7 +19,7 @@ import Language.Preprocessor.Cpphs
 import System.Directory
 import System.FilePath
 import System.FilePath.Glob
-import Watch.Options
+import Watch.Options hiding ((<>))
 import Watch.References
 import Watch.Types
 
@@ -75,7 +75,7 @@ investigateHaskell file = do
     pp <- liftIO (readFile file >>= cpp defs file)
     let result = parseModuleWithMode (lenientParseMode file) pp
     case result of
-        ParseFailed lc str -> error (show (lc, str))
+        ParseFailed lc str -> liftIO $ print (lc, str)
         ParseOk m -> forM_ (splices m) $ \ splice -> do
             let ps = findPrefixes
             paths <- liftIO $ mapM (spliceSearch splice) ps

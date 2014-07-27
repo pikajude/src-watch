@@ -1,60 +1,51 @@
-module Watch.Options where
+{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+
+module Watch.Options (
+    WatchOptions (..), opts,
+    module Options.Applicative
+) where
 
 import Control.Applicative
-import Options
+import Control.Arrow
+import Options.Applicative
 import Watch.Logger
 
 type Ignore = String
 
 data WatchOptions = WatchOptions
-                  { wIgnores :: [Ignore]
+                  { wTarget :: FilePath
+                  , wIgnores :: [Ignore]
                   , wDefines :: [(String, String)]
                   , wLevel :: Verbosity
                   } deriving Show
 
-instance Options WatchOptions where
-    defineOptions = WatchOptions
-        <$> defineOption optionType_strings
-            (\ o -> o { optionShortFlags = "i"
-                      , optionLongFlags = ["ignore"]
-                      , optionDefault = []
-                      , optionDescription =
-                            "Filepaths to ignore. This option can be used multiple times."
-                      })
+opts = WatchOptions
+   <$> argument Just (metavar "ROOT")
+   <*> many (strOption
+                (short 'i'
+              <> long "ignore"
+              <> metavar "PATTERN"
+              <> help "Ignore a filepath. This follows gitignore syntax."))
+   <*> many (cppOption
+                (short 'D'
+              <> long "cpp-define"
+              <> help "Define a symbol when running cpphs on source files."))
+   <*> fmap toEnumC
+       (option (short 'v'
+                <> value 0
+                <> help "Verbosity (0..1). Omitting this option is equivalent to -v0."))
 
-        <*> defineOption optionType_cppdefine
-            (\ o -> o { optionShortFlags = "D"
-                      , optionLongFlags = ["cpp-define"]
-                      , optionDescription = "CPP defines."
-                      })
+toEnumC :: forall a. (Enum a, Bounded a) => Int -> a
+toEnumC x | x >= fromEnum (maxBound :: a) = maxBound
+          | x <= fromEnum (minBound :: a) = minBound
+          | otherwise = toEnum x
 
-        <*> fmap (\ i -> reverse [minBound .. maxBound] !! clamp (0, 2) i)
-            (defineOption optionType_verbosity
-                (\ o -> o { optionShortFlags = "v"
-                          , optionDescription =
-                              "Verbosity. Repeat this flag to get more verbose."
-                          }))
+cppOption s = nullOption (s <> reader cpp) where
+    cpp s = return (second (drop 1) $ span (/= '=') s)
 
 clamp :: Ord a => (a, a) -> a -> a
 clamp (x, y) z
     | z <= x = x
     | z >= y = y
     | otherwise = z
-
-optionType_strings :: OptionType [String]
-optionType_strings = (optionType "text" [] (Right . return) (const "none"))
-    { optionTypeMerge = Just concat }
-
-optionType_cppdefine :: OptionType [(String, String)]
-optionType_cppdefine = (optionType "define" [] parseCPP (const "none"))
-    { optionTypeMerge = Just concat }
-    where
-        parseCPP s = case span (/= '=') s of
-            (a, b) -> Right [(a, drop 1 b)]
-
-optionType_verbosity :: OptionType Int
-optionType_verbosity = (optionType "verbosity" 0 (const (Right 1)) (const "info"))
-    { optionTypeMerge = Just length
-    , optionTypeUnary = Just 1 }
-
-{-# ANN module "HLint: ignore Use camelCase" #-}
