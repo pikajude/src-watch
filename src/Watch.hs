@@ -53,7 +53,7 @@ handleEv reset root ms ev = do
     let rel = makeRelative root (encodeString $ eventPath ev)
         key = takeDirectory rel
         pat = takeFileName rel
-    unless ("~" `isSuffixOf` pat) $ do
+    unless ("~" `isSuffixOf` pat) $
         if takeExtension pat == ".hs"
             then do
                 loud $ showEvent False ev
